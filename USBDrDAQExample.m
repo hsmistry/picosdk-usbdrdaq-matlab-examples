@@ -75,15 +75,44 @@ end
 
 %% Set the sampling interval
 
-pMicrosecondsForBlock = 1000;
+pMicrosecondsForBlock = libpointer('singlePtr', 1000.0);
 idealNumberOfSamples = 5000;
 channels = [usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE];
 numberOfChannels = length(channels);
 
+[status.setIntervalF] = calllib('usbdrdaq', 'UsbDrDaqSetIntervalF', handle, pMicrosecondsForBlock, idealNumberOfSamples, ...
+									channels, numberOfChannels);
+									
+%% Find scaling information
+% Find the scaling information for the selected channel(s).
+% In this case, the scalings are required for the scope input channel.
 
+channel 		= usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE;
+pNumScales 		= libpointer('int16Ptr', 0);
+pCurrentScale 	= libpointer('int16Ptr', 0);
+names 			= blanks(256);
+pNames 			= libpointer('cstring', names);
+
+status.getScalings = calllib('usbdrdaq', 'UsbDrDaqGetScalings', handle, channel, pNumScales, pCurrentScale, pNames, length(names)); 
+
+%% Set channel scaling
+
+scalingNumber = usbDrDaqEnuminfo.enUsbDrDaqScopeRange.USB_DRDAQ_5V;
+
+status.setScalings = calllib('usbdrdaq', 'UsbDrDaqSetScalings', handle, channel, scalingNumber);
 
 %% Set trigger
 
+enabled 	= PicoConstants.TRUE;
+autoTrigger = 0; 		% Do not re-arm the trigger
+autoMs 		= 0; 		% Wait indefinitely for trigger event
+direction 	= 0; 		% Falling edge
+threshold 	= 16256; 	% Convert to ADC counts
+hysteresis 	= 256;		% In ADC counts
+delay 		= -50.0; 	% Place trigger event in middle of block
+
+status.setTrigger = calllib('usbdrdaq', 'UsbDrDaqSetTrigger', handle, enabled, autoTrigger, autoMs, ...
+								channel, direction, 
 
 %% Start signal generator
 
