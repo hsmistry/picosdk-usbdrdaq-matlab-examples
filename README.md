@@ -1,4 +1,4 @@
-# USB DrDAQ Thermocouple Data Logger MATLAB Examples
+# USB DrDAQ Data Logger MATLAB Examples
 
 picosdk-usbdrdaq-matlab-examples is a MATLAB example demonstrating how to call shared library functions to acquire data from the 
 USB DrDAQ data logger. 
