@@ -28,9 +28,9 @@ Drivers are available for the following platforms. Refer to the subsections belo
 
 * Follow the instructions from our [Linux Software & Drivers for Oscilloscopes and Data Loggers page](https://www.picotech.com/downloads/linux) to install the required `libusbdrdaq` driver package.
 
-### Programmer's Guides
+### Programmer's Guide
 
-You can download the Programmer's Guide providing a description of the API functions for the usbtc08 driver from our [website](https://www.picotech.com/library/documentation).
+You can download the Programmer's Guide providing a description of the API functions for the usbdrdaq driver from our [website](https://www.picotech.com/library/documentation).
 
 ## Obtaining support
 
