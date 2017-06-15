@@ -44,7 +44,35 @@ USBDrDAQConfig;
 USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; % Scope channel input ranges
 
 %% Load the Shared Library
-loadlibrary('usbdrdaq.dll', @usbdrdaqMFile);
+
+archStr = computer('arch');
+
+usbDrDaqMFile = str2func(strcat('usbDrDaqMFile_', archStr));
+
+if ~libisloaded('usbdrdaq')
+
+    if ispc()
+        
+        loadlibrary('usbdrdaq.dll', usbDrDaqMFile);
+        
+    elseif ismac()
+        
+        error('USBDrDAQBlockExample:OSNotSupported', ...
+            'Mac OS X not supported, please contact Pico Technology Technical Support for further assistance.');
+        
+    elseif isunix()
+        
+        loadlibrary('libusbdrdaq.so', usbDrDaqMFile, 'alias', 'usbdrdaq');
+        
+    end
+
+    if ~libisloaded('usbdrdaq')
+        
+        error('USBDrDaqBlockExample:LibraryNotLoaded', 'Library usbdrdaq or prototype file not found');
+        
+    end
+
+end
 
 %% Open the Device
 
@@ -57,8 +85,8 @@ handle = pHandle.Value;
 if (status ~= PicoStatus.PICO_OK)
     
     unloadlibrary('usbdrdaq');
-    fprintf('Cannot open unit \n Error Code: %d\n', status);
-    return;
+    error('USBDrDaqBlockExample:UnitNotOpened, Cannot open unit - status code: %d.', status.openUnit);
+    
 end
 
 %% Display Unit Information
@@ -86,6 +114,16 @@ numberOfChannels = length(channels);
 
 [status.setIntervalF] = calllib('usbdrdaq', 'UsbDrDaqSetIntervalF', handle, pMicrosecondsForBlock, idealNumberOfSamples, ...
 									channels, numberOfChannels);
+                                
+microsecondsForBlock = pMicrosecondsForBlock.Value;
+                                
+if (status ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetIntervalF returned status code: %d\n', status.setIntervalF);
+    
+end
 									
 %% Find scaling information
 % Find the scaling information for the selected channel(s).
@@ -99,33 +137,65 @@ pNames 			= libpointer('cstring', names);
 
 status.getScalings = calllib('usbdrdaq', 'UsbDrDaqGetScalings', handle, channel, pNumScales, pCurrentScale, pNames, length(names)); 
 
+if (status ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqGetScalings, UsbDrDaqGetScalings returned status code: %d\n', status.getScalings);
+    
+end
+
 %% Set channel scaling
 
 scalingNumber = usbDrDaqEnuminfo.enUsbDrDaqScopeRange.USB_DRDAQ_5V;
 
 status.setScalings = calllib('usbdrdaq', 'UsbDrDaqSetScalings', handle, channel, scalingNumber);
 
+if (status ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetScalings returned status code: %d\n', status.setScalings);
+    
+end
+
 %% Set trigger
 
 enabled 	= PicoConstants.TRUE;
 autoTrigger = 0; 		% Do not re-arm the trigger
-autoMs 		= 0; 		% Wait indefinitely for trigger event
+autoMs 		= 2000; 	% Wait 2 seconds for trigger event, otherwise trigger automatically
 direction 	= 0; 		% Falling edge
-threshold 	= 16256;    % ADC counts
+threshold 	= 16256;    % In ADC counts
 hysteresis 	= 256;		% In ADC counts
 delay 		= -50.0; 	% Place trigger event in middle of block
 
 status.setTrigger = calllib('usbdrdaq', 'UsbDrDaqSetTrigger', handle, enabled, autoTrigger, autoMs, ...
 								channel, direction, threshold, hysteresis, delay);
+                            
+if (status ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetTrigger, UsbDrDaqSetTrigger returned status code: %d\n', status.setTrigger);
+    
+end
 
 %% Start signal generator
 
 offsetVoltage   = 0;        % volts
-peakToPeak      = 3000000   % ±1.5 V
+peakToPeak      = 3000000;  % ±1.5 V
 frequency       = 2000;     % 1 kHz
 waveType        = usbDrDaqEnuminfo.enUsbDrDaqWave.USB_DRDAQ_SINE;
 
-status.setSigGenBuiltIn = calllib('usbdrdaq','UsbDrDaqGetUnitInfo', handle, infoStr, length(infoStr), requiredSize, i);
+status.setSigGenBuiltIn = calllib('usbdrdaq','UsbDrDaqSetSigGenBuiltIn', handle, offsetVoltage, peakToPeak, frequency, waveType);
+
+if (status ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetSigGenBuiltIn, UsbDrDaqSetSigGenBuiltIn returned status code: %d\n', status.setSigGenBuiltIn);
+    
+end
 
 %% Start data collection
 % Collect a single block of data
@@ -134,15 +204,62 @@ method = usbDrDaqEnuminfo.e_BLOCK_METHOD.BM_SINGLE;
 
 status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, idealNumberOfSamples, method);
 
+if (status.run ~= PicoStatus.PICO_OK)
+   
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqRun, UsbDrDaqRun returned status code: %d\n', status.run);
+    
+end
 
+ready = 0;
+
+while (ready == 0)
+
+    [status.isReady, ready] = calllib('usbdrdaq', 'UsbDrDaqReady', handle, ready);
+   
+    pause(0.01);
+    
+end
 
 %% Retrieve data values
  
+pValues                 = libpointer('singlePtr', zeros(idealNumberOfSamples, 1, 'single'));
+numSamplesPerChannel    = uint32(idealNumberOfSamples / numberOfChannels);
+pOverflow               = libpointer('uint16Ptr', 0);
+pTriggerIndex           = libpointer('uint32Ptr', 0);
+
+[status.getValuesF, ~, numSamplesCollectedPerChannel] = calllib('usbdrdaq', 'UsbDrDaqGetValuesF', handle, pValues, numSamplesPerChannel, pOverflow, pTriggerIndex);
+
+values          = pValues.Value;
+overflow        = pOverflow.Value;
+triggerIndex    = pTriggerIndex.Value;
 
 %% Process data
 
+disp('Plotting data...');
+
+% Calculate time axis values - note that data collection is sequential
+% across all channels
+samplingInterval = (idealNumberOfSamples / microsecondsForBlock);
+
+timeUs = double(samplingInterval * double(0:(numSamplesCollectedPerChannel * numberOfChannels) - 1));
+
+figure1 = figure('Name','USB DrDAQ Example - Block Mode Capture', ...
+    'NumberTitle', 'off');
+
+% Channel A
+plot(timeUs, values, 'b');
+ylim([(-1 * USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)) USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)]);
+title('Block Data Capture', 'FontWeight', 'bold');
+xlabel('Time (\mus)');
+ylabel('Voltage (mV)');
+legend('Scope channel')
+grid on;
 
 %% Stop the device
+
+[status.stop] = calllib('usbdrdaq','UsbDrDaqStop', handle);
 
 %% Close Unit
 
@@ -151,3 +268,13 @@ status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, idealNumberOfSamples, me
 %% Unload Shared Library
 
 unloadlibrary('usbdrdaq');
+
+if (~libisloaded('usbdrdaq'))
+   
+    disp('usbdrdaq library unloaded successfully.');
+    
+else
+    
+    error('USBDrDAQBlockExample:LibraryUnloadError', 'Library not unloaded.');
+    
+end
