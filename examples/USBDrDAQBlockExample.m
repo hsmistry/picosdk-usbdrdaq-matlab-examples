@@ -180,6 +180,11 @@ if (status ~= PicoStatus.PICO_OK)
     
 end
 
+%% Prompt to connect Sig Gen output to Scope channel
+
+h = helpdlg('Connect Sig Gen to Scope channel and click OK.', 'Connect Input Signal');
+uiwait(h);
+
 %% Start signal generator
 
 offsetVoltage   = 0;        % volts
@@ -236,6 +241,7 @@ overflow        = pOverflow.Value;
 triggerIndex    = pTriggerIndex.Value;
 
 %% Process data
+% Plot scope channel
 
 disp('Plotting data...');
 
@@ -248,8 +254,25 @@ timeUs = double(samplingInterval * double(0:(numSamplesCollectedPerChannel * num
 figure1 = figure('Name','USB DrDAQ Example - Block Mode Capture', ...
     'NumberTitle', 'off');
 
-% Channel A
-plot(timeUs, values, 'b');
+% Plot scope channel
+% If plotting data from multiple channels, extract the time and data values
+% for that specific channel, ensuring that the first index corresponds to 
+% the channel for which you wish to plot the data.
+
+sortedChannels = sort(channels); % Sort in ascending order
+
+% Find index of the scope channel in the sortedChannels array - there
+% should only be one entry in the array for the channel
+scopeChannelIndex = find(sortedChannels == usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE);
+
+if (length(scopeChannelIndex) >= 1)
+   
+    scopeChannelIndex = scopeChannelIndex(1);
+    
+end
+
+plot(timeUs(1:numberOfChannels:end), values(1:numberOfChannels:end));
+
 ylim([(-1 * USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)) USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)]);
 title('Block Data Capture', 'FontWeight', 'bold');
 xlabel('Time (\mus)');
