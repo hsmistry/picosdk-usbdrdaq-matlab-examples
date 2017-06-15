@@ -39,6 +39,10 @@ close all;
 
 USBDrDAQConfig;
 
+%% Define any parameters required later on
+
+USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; % Scope channel input ranges
+
 %% Load the Shared Library
 loadlibrary('usbdrdaq.dll', @usbdrdaqMFile);
 
@@ -107,12 +111,12 @@ enabled 	= PicoConstants.TRUE;
 autoTrigger = 0; 		% Do not re-arm the trigger
 autoMs 		= 0; 		% Wait indefinitely for trigger event
 direction 	= 0; 		% Falling edge
-threshold 	= 16256; 	% Convert to ADC counts
+threshold 	= 16256;    % ADC counts
 hysteresis 	= 256;		% In ADC counts
 delay 		= -50.0; 	% Place trigger event in middle of block
 
 status.setTrigger = calllib('usbdrdaq', 'UsbDrDaqSetTrigger', handle, enabled, autoTrigger, autoMs, ...
-								channel, direction, 
+								channel, direction, threshold, hysteresis, delay);
 
 %% Start signal generator
 
@@ -124,6 +128,11 @@ waveType        = usbDrDaqEnuminfo.enUsbDrDaqWave.USB_DRDAQ_SINE;
 status.setSigGenBuiltIn = calllib('usbdrdaq','UsbDrDaqGetUnitInfo', handle, infoStr, length(infoStr), requiredSize, i);
 
 %% Start data collection
+% Collect a single block of data
+
+method = usbDrDaqEnuminfo.e_BLOCK_METHOD.BM_SINGLE;
+
+status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, idealNumberOfSamples, method);
 
 
 
