@@ -129,4 +129,6 @@ end
 %% Load Enumerations and Structure Information
 % Enumerations and structures are used by certain shared library functions.
 
-[usbDrDaqMethodinfo, usbDrDaqStructs, usbDrDaqEnuminfo, usbDrDaqThunkLibName] = usbdrdaqMFile;
+usbDrDAQConfigInfo.usbdrdaqMFile = str2func(strcat('usbdrdaqMFile_', usbDrDAQConfigInfo.archStr));
+
+[usbDrDaqMethodinfo, usbDrDaqStructs, usbDrDaqEnuminfo, usbDrDaqThunkLibName] = usbDrDAQConfigInfo.usbdrdaqMFile();
