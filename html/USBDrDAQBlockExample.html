@@ -1,0 +1,723 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>USB DrDAQ Block Data Capture Example</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2017-06-15"><meta name="DC.source" content="USBDrDAQBlockExample.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>USB DrDAQ Block Data Capture Example</h1><!--introduction--><p>This is a MATLAB script that demonstrates how to use the usbdrdaq shared library API functions to capture a block of data from a USB DrDAQ data logger using the following approach:</p><div><ul><li>Loading the shared library</li><li>Open a unit</li><li>Display unit information</li><li>Set up an input channel</li><li>Specify the sampling interval</li><li>Setup a trigger</li><li>Output a signal from the signal generator</li><li>Collect a block of data</li><li>Retrieve the data values and convert to millivolts</li><li>Plot data</li><li>Close the unit</li><li>Unload the shared library</li></ul></div><p>To run the script, type the name of the file, USBDrDAQ_example, at the MATLAB command prompt.</p><p>The file, USBDrDAQExample.m must be on your MATLAB PATH. For additional information on setting your MATLAB PATH, type 'help addpath' at the MATLAB command prompt.</p><p>Description: Demonstrates how to call simple functions in order to use setup a USB DrDAQ data logger and capture some data.</p><p>Copyright: &copy; 2014-2017 Pico Technology Ltd. See LICENSE file for terms.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Clear Command Line and Close Any Figures</a></li><li><a href="#2">Load Configuration Information</a></li><li><a href="#3">Define any parameters required later on</a></li><li><a href="#4">Load the Shared Library</a></li><li><a href="#5">Open the Device</a></li><li><a href="#6">Display Unit Information</a></li><li><a href="#7">Set the sampling interval</a></li><li><a href="#8">Find scaling information</a></li><li><a href="#9">Set channel scaling</a></li><li><a href="#10">Set trigger</a></li><li><a href="#11">Prompt to connect Sig Gen output to Scope channel</a></li><li><a href="#12">Start signal generator</a></li><li><a href="#13">Start data collection</a></li><li><a href="#14">Retrieve data values</a></li><li><a href="#15">Process data</a></li><li><a href="#16">Reset the ready flag if another block capture is required</a></li><li><a href="#17">Stop the signal generator</a></li><li><a href="#18">Stop the device</a></li><li><a href="#19">Close Unit</a></li><li><a href="#20">Unload Shared Library</a></li></ul></div><h2 id="1">Clear Command Line and Close Any Figures</h2><pre class="codeinput">clc;
+close <span class="string">all</span>;
+</pre><h2 id="2">Load Configuration Information</h2><pre class="codeinput">USBDrDAQConfig;
+</pre><h2 id="3">Define any parameters required later on</h2><pre class="codeinput">USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; <span class="comment">% Scope channel input ranges</span>
+</pre><h2 id="4">Load the Shared Library</h2><pre class="codeinput">fprintf(<span class="string">'USB DrDAQ Block Capture Example\n'</span>);
+fprintf(<span class="string">'Copyright &copy; 2014-2017 Pico Technology Ltd. See LICENSE file for terms.\n\n'</span>);
+
+archStr = computer(<span class="string">'arch'</span>);
+
+usbDrDaqMFile = str2func(strcat(<span class="string">'usbdrdaqMFile_'</span>, archStr));
+
+<span class="keyword">if</span> ~libisloaded(<span class="string">'usbdrdaq'</span>)
+
+    <span class="keyword">if</span> ispc()
+
+        loadlibrary(<span class="string">'usbdrdaq.dll'</span>, usbDrDaqMFile);
+
+    <span class="keyword">elseif</span> ismac()
+
+        error(<span class="string">'USBDrDAQBlockExample:OSNotSupported'</span>, <span class="keyword">...</span>
+            <span class="string">'Mac OS X not supported, please contact Pico Technology Technical Support for further assistance.'</span>);
+
+    <span class="keyword">elseif</span> isunix()
+
+        loadlibrary(<span class="string">'libusbdrdaq.so'</span>, usbDrDaqMFile, <span class="string">'alias'</span>, <span class="string">'usbdrdaq'</span>);
+
+    <span class="keyword">end</span>
+
+    <span class="keyword">if</span> ~libisloaded(<span class="string">'usbdrdaq'</span>)
+
+        error(<span class="string">'USBDrDaqBlockExample:LibraryNotLoaded'</span>, <span class="string">'Library usbdrdaq or prototype file not found'</span>);
+
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">USB DrDAQ Block Capture Example
+Copyright &copy; 2014-2017 Pico Technology Ltd. See LICENSE file for terms.
+
+</pre><h2 id="5">Open the Device</h2><pre class="codeinput">pHandle = libpointer(<span class="string">'int16Ptr'</span>, 0);
+
+[status.openUnit] = calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqOpenUnit'</span>, pHandle);
+
+handle = pHandle.Value;
+
+<span class="keyword">if</span> (status.openUnit ~= PicoStatus.PICO_OK)
+
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UnitNotOpened, Cannot open unit - status code: %d.'</span>, status.openUnit);
+
+<span class="keyword">end</span>
+</pre><h2 id="6">Display Unit Information</h2><pre class="codeinput">infoStr = blanks(100);
+requiredSize = length(infoStr);
+
+ unitInfoDesc = {<span class="string">'Driver version: '</span>; <span class="string">'USB version: '</span>; <span class="string">'Hardware version: '</span>; <span class="string">'Variant: '</span>; <span class="keyword">...</span>
+        <span class="string">'Batch &amp; Serial: '</span>; <span class="string">'Cal. Date: '</span>; <span class="string">'Kernel version: '</span>};
+
+fprintf(<span class="string">'Unit information:-\n\n'</span>);
+
+status.getUnitInfo = zeros(7, 1, <span class="string">'uint32'</span>);
+
+<span class="keyword">for</span> i = 1:length(unitInfoDesc)
+
+    [status.getUnitInfo(i, 1), infoStr1, requiredsize] = calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqGetUnitInfo'</span>,<span class="keyword">...</span>
+        handle, infoStr, length(infoStr), requiredSize, (i - 1));
+
+    fprintf(<span class="string">'%s\n'</span>, char(strcat(unitInfoDesc(i), infoStr1)));
+
+<span class="keyword">end</span>
+
+fprintf(<span class="string">'\n'</span>);
+</pre><pre class="codeoutput">Unit information:-
+
+Driver version: 1.2.0.4
+USB version: USB 1.1
+Hardware version: 1
+Variant: USB DrDAQ
+Batch &amp; Serial: AY776/212
+Cal. Date: 28Feb13
+Kernel version: PICOPP.SYS V1.0
+
+</pre><h2 id="7">Set the sampling interval</h2><pre class="codeinput">pMicrosecondsForBlock = libpointer(<span class="string">'singlePtr'</span>, 1000.0);
+idealNumberOfSamples = 5000;
+channels = [usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE];
+numberOfChannels = length(channels);
+
+[status.setIntervalF] = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqSetIntervalF'</span>, handle, pMicrosecondsForBlock, idealNumberOfSamples, <span class="keyword">...</span>
+									channels, numberOfChannels);
+
+microsecondsForBlock = pMicrosecondsForBlock.Value;
+
+<span class="keyword">if</span> (status.setIntervalF ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetIntervalF returned status code: %d\n'</span>, status.setIntervalF);
+
+<span class="keyword">end</span>
+</pre><h2 id="8">Find scaling information</h2><p>Find the scaling information for the selected channel(s). In this case, the scalings are required for the scope input channel.</p><pre class="codeinput">channel 		= usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE;
+pNumScales 		= libpointer(<span class="string">'int16Ptr'</span>, 0);
+pCurrentScale 	= libpointer(<span class="string">'int16Ptr'</span>, 0);
+names 			= blanks(256);
+
+[status.getScalings, ~, ~, scalingNames] = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqGetScalings'</span>, handle, channel, pNumScales, pCurrentScale, names, length(names));
+
+numScales = pNumScales.Value;
+currentScale = pCurrentScale.Value;
+
+fprintf(<span class="string">'Information for Scope channel:-\n\n'</span>);
+fprintf(<span class="string">'Number of scales: %d\n'</span>, numScales);
+fprintf(<span class="string">'Current scale: %d\n'</span>, currentScale);
+fprintf(<span class="string">'Names: \n\n%s\n'</span>, scalingNames);
+
+
+<span class="keyword">if</span> (status.getScalings ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqGetScalings, UsbDrDaqGetScalings returned status code: %d\n'</span>, status.getScalings);
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Information for Scope channel:-
+
+Number of scales: 4
+Current scale: 0
+Names: 
+
++/-10 V:V+/-5 V:V+/-2.5 V:V+/-1.25 V:V
+</pre><h2 id="9">Set channel scaling</h2><pre class="codeinput">scalingNumber = usbDrDaqEnuminfo.enUsbDrDaqScopeRange.USB_DRDAQ_2V5;
+
+status.setScalings = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqSetScalings'</span>, handle, channel, scalingNumber);
+
+<span class="keyword">if</span> (status.setScalings ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetScalings returned status code: %d\n'</span>, status.setScalings);
+
+<span class="keyword">end</span>
+</pre><h2 id="10">Set trigger</h2><pre class="codeinput">enabled 	= PicoConstants.TRUE;
+autoTrigger = 0; 		<span class="comment">% Re-arm the trigger</span>
+autoMs 		= 2000; 	<span class="comment">% Wait 2 seconds for trigger event, otherwise trigger automatically</span>
+direction 	= 0; 		<span class="comment">% Falling edge</span>
+threshold 	= 1000;        <span class="comment">% In ADC counts</span>
+hysteresis 	= 50;		<span class="comment">% In ADC counts</span>
+delay 		= -50.0; 	<span class="comment">% Place trigger event in middle of block</span>
+
+status.setTrigger = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqSetTrigger'</span>, handle, enabled, autoTrigger, autoMs, <span class="keyword">...</span>
+								channel, direction, threshold, hysteresis, delay);
+
+<span class="keyword">if</span> (status.setTrigger ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqSetTrigger, UsbDrDaqSetTrigger returned status code: %d\n'</span>, status.setTrigger);
+
+<span class="keyword">end</span>
+</pre><h2 id="11">Prompt to connect Sig Gen output to Scope channel</h2><pre class="codeinput">h = helpdlg(<span class="string">'Connect Sig Gen to Scope channel and click OK.'</span>, <span class="string">'Connect Input Signal'</span>);
+uiwait(h);
+</pre><h2 id="12">Start signal generator</h2><pre class="codeinput">offsetVoltage   = 0;        <span class="comment">% volts</span>
+peakToPeak      = 3000000;  <span class="comment">% &plusmn;1.5 V</span>
+frequency       = 1000;     <span class="comment">% 1 kHz</span>
+waveType        = usbDrDaqEnuminfo.enUsbDrDaqWave.USB_DRDAQ_SINE;
+
+status.setSigGenBuiltIn = calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqSetSigGenBuiltIn'</span>, handle, offsetVoltage, peakToPeak, frequency, waveType);
+
+<span class="keyword">if</span> (status.setSigGenBuiltIn ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqSetSigGenBuiltIn, UsbDrDaqSetSigGenBuiltIn returned status code: %d\n'</span>, status.setSigGenBuiltIn);
+
+<span class="keyword">end</span>
+</pre><h2 id="13">Start data collection</h2><p>Collect a single block of data</p><pre class="codeinput">disp(<span class="string">'Starting data collection...'</span>);
+
+method = usbDrDaqEnuminfo.e_BLOCK_METHOD.BM_SINGLE;
+
+status.run = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqRun'</span>, handle, idealNumberOfSamples, method);
+
+<span class="keyword">if</span> (status.run ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqRun, UsbDrDaqRun returned status code: %d\n'</span>, status.run);
+
+<span class="keyword">end</span>
+
+ready = 0;
+
+<span class="keyword">while</span> (ready == 0)
+
+    [status.isReady, ready] = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqReady'</span>, handle, ready);
+
+    pause(0.01);
+
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> (ready == PicoConstants.TRUE)
+
+    disp(<span class="string">'Data collection complete.'</span>);
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">Starting data collection...
+Data collection complete.
+</pre><h2 id="14">Retrieve data values</h2><pre class="codeinput">pValues                 = libpointer(<span class="string">'singlePtr'</span>, zeros(idealNumberOfSamples, 1, <span class="string">'single'</span>));
+numSamplesPerChannel    = uint32(idealNumberOfSamples / numberOfChannels);
+pOverflow               = libpointer(<span class="string">'uint16Ptr'</span>, 0);
+pTriggerIndex           = libpointer(<span class="string">'uint32Ptr'</span>, 0);
+
+[status.getValuesF, ~, numSamplesCollectedPerChannel] = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqGetValuesF'</span>, handle, pValues, numSamplesPerChannel, pOverflow, pTriggerIndex);
+
+<span class="keyword">if</span> (status.getValuesF ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqGetValuesF, UsbDrDaqGetValuesF returned status code: %d\n'</span>, status.getValuesF);
+
+<span class="keyword">end</span>
+
+values          = pValues.Value;
+overflow        = pOverflow.Value;
+triggerIndex    = pTriggerIndex.Value;
+</pre><h2 id="15">Process data</h2><p>Process the data as requried. In this example, we plot the scope channel data.</p><pre class="codeinput">disp(<span class="string">'Plotting data...'</span>);
+
+<span class="comment">% Calculate time axis values - note that data collection is sequential</span>
+<span class="comment">% across all channels</span>
+samplingInterval = (idealNumberOfSamples / microsecondsForBlock);
+
+timeUs = double(samplingInterval * double(0:(numSamplesCollectedPerChannel * numberOfChannels) - 1));
+
+figure1 = figure(<span class="string">'Name'</span>,<span class="string">'USB DrDAQ Example - Block Mode Capture'</span>, <span class="keyword">...</span>
+    <span class="string">'NumberTitle'</span>, <span class="string">'off'</span>);
+
+<span class="comment">% Plot scope channel</span>
+<span class="comment">% If plotting data from multiple channels, extract the time and data values</span>
+<span class="comment">% for that specific channel, ensuring that the first index corresponds to</span>
+<span class="comment">% the channel for which you wish to plot the data.</span>
+
+sortedChannels = sort(channels); <span class="comment">% Sort in ascending order</span>
+
+<span class="comment">% Find index of the scope channel in the sortedChannels array - there</span>
+<span class="comment">% should only be one entry in the array for the channel</span>
+scopeChannelIndex = find(sortedChannels == usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE);
+
+<span class="keyword">if</span> (length(scopeChannelIndex) &gt;= 1)
+
+    scopeChannelIndex = scopeChannelIndex(1);
+
+<span class="keyword">end</span>
+
+hold <span class="string">on</span>;
+
+plot(timeUs(1:numberOfChannels:end), values(1:numberOfChannels:end));
+
+<span class="comment">% Plot the trigger point</span>
+plot(timeUs(triggerIndex + 1), values(triggerIndex + 1), <span class="string">'xr'</span>);
+
+ylim([(-1 * USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)) USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)]);
+title(<span class="string">'Block Data Capture'</span>, <span class="string">'FontWeight'</span>, <span class="string">'bold'</span>);
+xlabel(<span class="string">'Time (\mus)'</span>);
+ylabel(<span class="string">'Voltage (mV)'</span>);
+legend(<span class="string">'Scope channel'</span>)
+
+grid <span class="string">on</span>;
+hold <span class="string">off</span>;
+</pre><pre class="codeoutput">Plotting data...
+</pre><img vspace="5" hspace="5" src="USBDrDAQBlockExample_01.png" alt=""> <h2 id="16">Reset the ready flag if another block capture is required</h2><pre class="codeinput">ready = 0;
+</pre><h2 id="17">Stop the signal generator</h2><pre class="codeinput">[status.stopSigGen] = calllib(<span class="string">'usbdrdaq'</span>, <span class="string">'UsbDrDaqStopSigGen'</span>, handle);
+
+<span class="keyword">if</span> (status.stopSigGen ~= PicoStatus.PICO_OK)
+
+    calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+    unloadlibrary(<span class="string">'usbdrdaq'</span>);
+    error(<span class="string">'USBDrDaqBlockExample:UsbDrDaqStopSigGen, UsbDrDaqStopSigGen returned status code: %d\n'</span>, status.getValuesF);
+
+<span class="keyword">end</span>
+</pre><h2 id="18">Stop the device</h2><pre class="codeinput">[status.stop] = calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqStop'</span>, handle);
+</pre><h2 id="19">Close Unit</h2><pre class="codeinput">[status.closeUnit] = calllib(<span class="string">'usbdrdaq'</span>,<span class="string">'UsbDrDaqCloseUnit'</span>, handle);
+</pre><h2 id="20">Unload Shared Library</h2><pre class="codeinput">unloadlibrary(<span class="string">'usbdrdaq'</span>);
+
+<span class="keyword">if</span> (~libisloaded(<span class="string">'usbdrdaq'</span>))
+
+    disp(<span class="string">'usbdrdaq library unloaded successfully.'</span>);
+
+<span class="keyword">else</span>
+
+    error(<span class="string">'USBDrDAQBlockExample:LibraryUnloadError'</span>, <span class="string">'Library not unloaded.'</span>);
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">usbdrdaq library unloaded successfully.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% USB DrDAQ Block Data Capture Example
+% This is a MATLAB script that demonstrates how to use the usbdrdaq shared
+% library API functions to capture a block of data from a USB DrDAQ data
+% logger using the following approach:
+%       
+% * Loading the shared library
+% * Open a unit 
+% * Display unit information 
+% * Set up an input channel
+% * Specify the sampling interval
+% * Setup a trigger
+% * Output a signal from the signal generator
+% * Collect a block of data
+% * Retrieve the data values and convert to millivolts
+% * Plot data
+% * Close the unit
+% * Unload the shared library
+%  
+% To run the script, type the name of the file,
+% USBDrDAQ_example, at the MATLAB command prompt.
+% 
+% The file, USBDrDAQExample.m must be on your MATLAB PATH. For additional
+% information on setting your MATLAB PATH, type 'help addpath' at the
+% MATLAB command prompt.
+%
+% Description:
+% Demonstrates how to call simple functions in order to use setup a
+% USB DrDAQ data logger and capture some data.
+%
+% Copyright: © 2014-2017 Pico Technology Ltd. See LICENSE file for
+% terms.
+
+%% Clear Command Line and Close Any Figures
+
+clc;
+close all;
+
+%% Load Configuration Information
+
+USBDrDAQConfig;
+
+%% Define any parameters required later on
+
+USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; % Scope channel input ranges
+
+%% Load the Shared Library
+
+fprintf('USB DrDAQ Block Capture Example\n');
+fprintf('Copyright © 2014-2017 Pico Technology Ltd. See LICENSE file for terms.\n\n');
+
+archStr = computer('arch');
+
+usbDrDaqMFile = str2func(strcat('usbdrdaqMFile_', archStr));
+
+if ~libisloaded('usbdrdaq')
+
+    if ispc()
+        
+        loadlibrary('usbdrdaq.dll', usbDrDaqMFile);
+        
+    elseif ismac()
+        
+        error('USBDrDAQBlockExample:OSNotSupported', ...
+            'Mac OS X not supported, please contact Pico Technology Technical Support for further assistance.');
+        
+    elseif isunix()
+        
+        loadlibrary('libusbdrdaq.so', usbDrDaqMFile, 'alias', 'usbdrdaq');
+        
+    end
+
+    if ~libisloaded('usbdrdaq')
+        
+        error('USBDrDaqBlockExample:LibraryNotLoaded', 'Library usbdrdaq or prototype file not found');
+        
+    end
+
+end
+
+%% Open the Device
+
+pHandle = libpointer('int16Ptr', 0);
+
+[status.openUnit] = calllib('usbdrdaq','UsbDrDaqOpenUnit', pHandle);
+
+handle = pHandle.Value;
+
+if (status.openUnit ~= PicoStatus.PICO_OK)
+    
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UnitNotOpened, Cannot open unit - status code: %d.', status.openUnit);
+    
+end
+
+%% Display Unit Information
+
+infoStr = blanks(100);
+requiredSize = length(infoStr);
+
+ unitInfoDesc = {'Driver version: '; 'USB version: '; 'Hardware version: '; 'Variant: '; ...
+        'Batch & Serial: '; 'Cal. Date: '; 'Kernel version: '};
+
+fprintf('Unit information:-\n\n');
+
+status.getUnitInfo = zeros(7, 1, 'uint32');
+
+for i = 1:length(unitInfoDesc)
+    
+    [status.getUnitInfo(i, 1), infoStr1, requiredsize] = calllib('usbdrdaq','UsbDrDaqGetUnitInfo',...
+        handle, infoStr, length(infoStr), requiredSize, (i - 1));
+    
+    fprintf('%s\n', char(strcat(unitInfoDesc(i), infoStr1)));
+    
+end
+
+fprintf('\n');
+
+%% Set the sampling interval
+
+pMicrosecondsForBlock = libpointer('singlePtr', 1000.0);
+idealNumberOfSamples = 5000;
+channels = [usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE];
+numberOfChannels = length(channels);
+
+[status.setIntervalF] = calllib('usbdrdaq', 'UsbDrDaqSetIntervalF', handle, pMicrosecondsForBlock, idealNumberOfSamples, ...
+									channels, numberOfChannels);
+                                
+microsecondsForBlock = pMicrosecondsForBlock.Value;
+                                
+if (status.setIntervalF ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetIntervalF returned status code: %d\n', status.setIntervalF);
+    
+end
+									
+%% Find scaling information
+% Find the scaling information for the selected channel(s).
+% In this case, the scalings are required for the scope input channel.
+
+channel 		= usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE;
+pNumScales 		= libpointer('int16Ptr', 0);
+pCurrentScale 	= libpointer('int16Ptr', 0);
+names 			= blanks(256);
+
+[status.getScalings, ~, ~, scalingNames] = calllib('usbdrdaq', 'UsbDrDaqGetScalings', handle, channel, pNumScales, pCurrentScale, names, length(names)); 
+
+numScales = pNumScales.Value;
+currentScale = pCurrentScale.Value;
+
+fprintf('Information for Scope channel:-\n\n');
+fprintf('Number of scales: %d\n', numScales);
+fprintf('Current scale: %d\n', currentScale);
+fprintf('Names: \n\n%s\n', scalingNames);
+
+
+if (status.getScalings ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqGetScalings, UsbDrDaqGetScalings returned status code: %d\n', status.getScalings);
+    
+end
+
+%% Set channel scaling
+
+scalingNumber = usbDrDaqEnuminfo.enUsbDrDaqScopeRange.USB_DRDAQ_2V5;
+
+status.setScalings = calllib('usbdrdaq', 'UsbDrDaqSetScalings', handle, channel, scalingNumber);
+
+if (status.setScalings ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetIntervalF, UsbDrDaqSetScalings returned status code: %d\n', status.setScalings);
+    
+end
+
+%% Set trigger
+
+enabled 	= PicoConstants.TRUE;
+autoTrigger = 0; 		% Re-arm the trigger
+autoMs 		= 2000; 	% Wait 2 seconds for trigger event, otherwise trigger automatically
+direction 	= 0; 		% Falling edge
+threshold 	= 1000;        % In ADC counts
+hysteresis 	= 50;		% In ADC counts
+delay 		= -50.0; 	% Place trigger event in middle of block
+
+status.setTrigger = calllib('usbdrdaq', 'UsbDrDaqSetTrigger', handle, enabled, autoTrigger, autoMs, ...
+								channel, direction, threshold, hysteresis, delay);
+                            
+if (status.setTrigger ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetTrigger, UsbDrDaqSetTrigger returned status code: %d\n', status.setTrigger);
+    
+end
+
+%% Prompt to connect Sig Gen output to Scope channel
+
+h = helpdlg('Connect Sig Gen to Scope channel and click OK.', 'Connect Input Signal');
+uiwait(h);
+
+%% Start signal generator
+
+offsetVoltage   = 0;        % volts
+peakToPeak      = 3000000;  % ±1.5 V
+frequency       = 1000;     % 1 kHz
+waveType        = usbDrDaqEnuminfo.enUsbDrDaqWave.USB_DRDAQ_SINE;
+
+status.setSigGenBuiltIn = calllib('usbdrdaq','UsbDrDaqSetSigGenBuiltIn', handle, offsetVoltage, peakToPeak, frequency, waveType);
+
+if (status.setSigGenBuiltIn ~= PicoStatus.PICO_OK)
+    
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqSetSigGenBuiltIn, UsbDrDaqSetSigGenBuiltIn returned status code: %d\n', status.setSigGenBuiltIn);
+    
+end
+
+%% Start data collection
+% Collect a single block of data
+
+disp('Starting data collection...');
+
+method = usbDrDaqEnuminfo.e_BLOCK_METHOD.BM_SINGLE;
+
+status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, idealNumberOfSamples, method);
+
+if (status.run ~= PicoStatus.PICO_OK)
+   
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqRun, UsbDrDaqRun returned status code: %d\n', status.run);
+    
+end
+
+ready = 0;
+
+while (ready == 0)
+
+    [status.isReady, ready] = calllib('usbdrdaq', 'UsbDrDaqReady', handle, ready);
+   
+    pause(0.01);
+    
+end
+
+if (ready == PicoConstants.TRUE)
+   
+    disp('Data collection complete.');
+    
+end
+
+%% Retrieve data values
+ 
+pValues                 = libpointer('singlePtr', zeros(idealNumberOfSamples, 1, 'single'));
+numSamplesPerChannel    = uint32(idealNumberOfSamples / numberOfChannels);
+pOverflow               = libpointer('uint16Ptr', 0);
+pTriggerIndex           = libpointer('uint32Ptr', 0);
+
+[status.getValuesF, ~, numSamplesCollectedPerChannel] = calllib('usbdrdaq', 'UsbDrDaqGetValuesF', handle, pValues, numSamplesPerChannel, pOverflow, pTriggerIndex);
+
+if (status.getValuesF ~= PicoStatus.PICO_OK)
+   
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqGetValuesF, UsbDrDaqGetValuesF returned status code: %d\n', status.getValuesF);
+    
+end
+
+values          = pValues.Value;
+overflow        = pOverflow.Value;
+triggerIndex    = pTriggerIndex.Value;
+
+%% Process data
+% Process the data as requried. In this example, we plot the scope channel 
+% data.
+
+disp('Plotting data...');
+
+% Calculate time axis values - note that data collection is sequential
+% across all channels
+samplingInterval = (idealNumberOfSamples / microsecondsForBlock);
+
+timeUs = double(samplingInterval * double(0:(numSamplesCollectedPerChannel * numberOfChannels) - 1));
+
+figure1 = figure('Name','USB DrDAQ Example - Block Mode Capture', ...
+    'NumberTitle', 'off');
+
+% Plot scope channel
+% If plotting data from multiple channels, extract the time and data values
+% for that specific channel, ensuring that the first index corresponds to 
+% the channel for which you wish to plot the data.
+
+sortedChannels = sort(channels); % Sort in ascending order
+
+% Find index of the scope channel in the sortedChannels array - there
+% should only be one entry in the array for the channel
+scopeChannelIndex = find(sortedChannels == usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE);
+
+if (length(scopeChannelIndex) >= 1)
+   
+    scopeChannelIndex = scopeChannelIndex(1);
+    
+end
+
+hold on;
+
+plot(timeUs(1:numberOfChannels:end), values(1:numberOfChannels:end));
+
+% Plot the trigger point
+plot(timeUs(triggerIndex + 1), values(triggerIndex + 1), 'xr');
+
+ylim([(-1 * USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)) USBDRDAQ_SCOPE_INPUTS_MV(scalingNumber + 1)]);
+title('Block Data Capture', 'FontWeight', 'bold');
+xlabel('Time (\mus)');
+ylabel('Voltage (mV)');
+legend('Scope channel')
+
+grid on;
+hold off;
+
+%% Reset the ready flag if another block capture is required
+
+ready = 0;
+
+%% Stop the signal generator
+
+[status.stopSigGen] = calllib('usbdrdaq', 'UsbDrDaqStopSigGen', handle);
+
+if (status.stopSigGen ~= PicoStatus.PICO_OK)
+   
+    calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+    unloadlibrary('usbdrdaq');
+    error('USBDrDaqBlockExample:UsbDrDaqStopSigGen, UsbDrDaqStopSigGen returned status code: %d\n', status.getValuesF);
+    
+end
+
+%% Stop the device
+
+[status.stop] = calllib('usbdrdaq','UsbDrDaqStop', handle);
+
+%% Close Unit
+
+[status.closeUnit] = calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
+
+%% Unload Shared Library
+
+unloadlibrary('usbdrdaq');
+
+if (~libisloaded('usbdrdaq'))
+   
+    disp('usbdrdaq library unloaded successfully.');
+    
+else
+    
+    error('USBDrDAQBlockExample:LibraryUnloadError', 'Library not unloaded.');
+    
+end
+
+##### SOURCE END #####
+--></body></html>
