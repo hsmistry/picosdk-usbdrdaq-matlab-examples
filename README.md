@@ -1,9 +1,8 @@
 # USB DrDAQ Data Logger MATLAB Examples
 
-picosdk-usbdrdaq-matlab-examples is a set of MATLAB files allowing you to interface to the USB DrDAQ data logger from MATLAB.
+*picosdk-usbdrdaq-matlab-examples* is a set of MATLAB files allowing you to interface to the USB DrDAQ data logger from MATLAB.
 
-An example is provided as a MATLAB script demonstrating how to call shared library functions to acquire data from the 
-USB DrDAQ data logger. 
+An example is provided as a MATLAB script demonstrating how to call shared library functions to acquire data from the USB DrDAQ data logger. 
 
 ## Getting started
 
