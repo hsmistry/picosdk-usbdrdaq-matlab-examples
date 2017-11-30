@@ -46,7 +46,6 @@ USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; % Scope channel input rang
 %% Load the Shared Library
 
 fprintf('USB DrDAQ Block Capture Example\n');
-fprintf('Copyright © 2014-2017 Pico Technology Ltd. See LICENSE file for terms.\n\n');
 
 archStr = computer('arch');
 
@@ -118,11 +117,12 @@ fprintf('\n');
 %% Set the sampling interval
 
 pMicrosecondsForBlock = libpointer('singlePtr', 1000.0);
-idealNumberOfSamples = 5000;
+totalSamples = 5000;
 channels = [usbDrDaqEnuminfo.enUsbDrDaqInputs.USB_DRDAQ_CHANNEL_SCOPE];
 numberOfChannels = length(channels);
+numberOfSamplesPerChannel = totalSamples / numberOfChannels;
 
-[status.setIntervalF] = calllib('usbdrdaq', 'UsbDrDaqSetIntervalF', handle, pMicrosecondsForBlock, idealNumberOfSamples, ...
+[status.setIntervalF] = calllib('usbdrdaq', 'UsbDrDaqSetIntervalF', handle, pMicrosecondsForBlock, numberOfSamplesPerChannel, ...
 									channels, numberOfChannels);
                                 
 microsecondsForBlock = pMicrosecondsForBlock.Value;
@@ -153,7 +153,6 @@ fprintf('Information for Scope channel:-\n\n');
 fprintf('Number of scales: %d\n', numScales);
 fprintf('Current scale: %d\n', currentScale);
 fprintf('Names: \n\n%s\n', scalingNames);
-
 
 if (status.getScalings ~= PicoStatus.PICO_OK)
     
@@ -227,7 +226,7 @@ disp('Starting data collection...');
 
 method = usbDrDaqEnuminfo.e_BLOCK_METHOD.BM_SINGLE;
 
-status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, idealNumberOfSamples, method);
+status.run = calllib('usbdrdaq', 'UsbDrDaqRun', handle, numberOfSamplesPerChannel, method);
 
 if (status.run ~= PicoStatus.PICO_OK)
    
@@ -255,12 +254,12 @@ end
 
 %% Retrieve data values
  
-pValues                 = libpointer('singlePtr', zeros(idealNumberOfSamples, 1, 'single'));
-numSamplesPerChannel    = uint32(idealNumberOfSamples / numberOfChannels);
+pValues                 = libpointer('singlePtr', zeros(totalSamples, 1, 'single'));
+pSamplesPerChannel      = libpointer('uint32Ptr', numberOfSamplesPerChannel);
 pOverflow               = libpointer('uint16Ptr', 0);
 pTriggerIndex           = libpointer('uint32Ptr', 0);
 
-[status.getValuesF, ~, numSamplesCollectedPerChannel] = calllib('usbdrdaq', 'UsbDrDaqGetValuesF', handle, pValues, numSamplesPerChannel, pOverflow, pTriggerIndex);
+[status.getValuesF, ~, ~, ~] = calllib('usbdrdaq', 'UsbDrDaqGetValuesF', handle, pValues, pSamplesPerChannel, pOverflow, pTriggerIndex);
 
 if (status.getValuesF ~= PicoStatus.PICO_OK)
    
@@ -270,9 +269,10 @@ if (status.getValuesF ~= PicoStatus.PICO_OK)
     
 end
 
-values          = pValues.Value;
-overflow        = pOverflow.Value;
-triggerIndex    = pTriggerIndex.Value;
+values                          = pValues.Value;
+numSamplesCollectedPerChannel   = pSamplesPerChannel.Value;
+overflow                        = pOverflow.Value;
+triggerIndex                    = pTriggerIndex.Value;
 
 %% Process data
 % Process the data as requried. In this example, we plot the scope channel 
@@ -282,7 +282,7 @@ disp('Plotting data...');
 
 % Calculate time axis values - note that data collection is sequential
 % across all channels
-samplingInterval = (idealNumberOfSamples / microsecondsForBlock);
+samplingInterval = (totalSamples / microsecondsForBlock);
 
 timeUs = double(samplingInterval * double(0:(numSamplesCollectedPerChannel * numberOfChannels) - 1));
 
