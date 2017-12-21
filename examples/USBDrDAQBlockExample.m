@@ -30,12 +30,15 @@
 % Copyright: © 2014-2017 Pico Technology Ltd. See LICENSE file for
 % terms.
 
-%% Clear Command Line and Close Any Figures
+%% Clear command line and workspace and close any figures
 
 clc;
+clear;
 close all;
 
-%% Load Configuration Information
+fprintf('USB DrDAQ Block Capture Example\n\n');
+
+%% Load configuration information
 
 USBDrDAQConfig;
 
@@ -43,9 +46,7 @@ USBDrDAQConfig;
 
 USBDRDAQ_SCOPE_INPUTS_MV = [1250, 2500, 5000, 10000]; % Scope channel input ranges
 
-%% Load the Shared Library
-
-fprintf('USB DrDAQ Block Capture Example\n');
+%% Load the shared library
 
 archStr = computer('arch');
 
@@ -60,7 +61,7 @@ if ~libisloaded('usbdrdaq')
     elseif ismac()
         
         error('USBDrDAQBlockExample:OSNotSupported', ...
-            'Mac OS X not supported, please contact Pico Technology Technical Support for further assistance.');
+            'macOS not supported, please contact Pico Technology Technical Support for further assistance.');
         
     elseif isunix()
         
@@ -76,7 +77,7 @@ if ~libisloaded('usbdrdaq')
 
 end
 
-%% Open the Device
+%% Open the device
 
 pHandle = libpointer('int16Ptr', 0);
 
@@ -91,7 +92,7 @@ if (status.openUnit ~= PicoStatus.PICO_OK)
     
 end
 
-%% Display Unit Information
+%% Display unit information
 
 infoStr = blanks(100);
 requiredSize = length(infoStr);
@@ -182,7 +183,7 @@ enabled 	= PicoConstants.TRUE;
 autoTrigger = 0; 		% Re-arm the trigger
 autoMs 		= 2000; 	% Wait 2 seconds for trigger event, otherwise trigger automatically
 direction 	= 0; 		% Falling edge
-threshold 	= 1000;        % In ADC counts
+threshold 	= 1000;     % millivolts (refer to channel scaling)
 hysteresis 	= 50;		% In ADC counts
 delay 		= -50.0; 	% Place trigger event in middle of block
 
@@ -275,7 +276,7 @@ overflow                        = pOverflow.Value;
 triggerIndex                    = pTriggerIndex.Value;
 
 %% Process data
-% Process the data as requried. In this example, we plot the scope channel 
+% Process the data as required. In this example, we plot the scope channel 
 % data.
 
 disp('Plotting data...');
@@ -342,11 +343,11 @@ end
 
 [status.stop] = calllib('usbdrdaq','UsbDrDaqStop', handle);
 
-%% Close Unit
+%% Close unit
 
 [status.closeUnit] = calllib('usbdrdaq','UsbDrDaqCloseUnit', handle);
 
-%% Unload Shared Library
+%% Unload shared library
 
 unloadlibrary('usbdrdaq');
 
